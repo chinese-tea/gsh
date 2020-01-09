@@ -4,10 +4,8 @@ echo '<pre>';
 
 
 
-$str = 'a{b{c}}';
-
-
-print_r(split_bracket($str));exit;
+//$str = 'function a(){if(true){echo 666;}else{echo888;}}';
+//print_r(split_bracket($str));exit;
 
 
 
@@ -41,10 +39,45 @@ for($i=0; $i<$len; $i++){
 $arr = $new;
 //*****************************************************
 
-$str = implode("\n", $arr);
-//echo $str;exit;
+//$str = implode("\n", $arr);
+//echo $str."\n";
+print_r($arr);
 
-//然后把括号右边的另起一行，比如if(1){ $a=5;   思路是分别查找每一行左括号和右括号的位置，如果右括号的位置大于左括号，说明是闭合的，否则另起下一行
+$arr = splitBracket($arr, '{');
+$arr = splitBracket($arr, '}');
+
+
+
+foreach($arr as $k => $v){
+	$arr[$k] = split_bracket_2($v);
+} 
+
+print_r($arr);exit;
+
+function splitBracket($arr, $b){
+	$new = array();
+	foreach($arr as $k => $v){
+
+		if(strpos($v, $b) !== false){
+			$temp = explode($b, $v);
+			$len = count($temp);
+			$bracket = $b;
+			for($i=0; $i<$len; $i++){
+				if($i == ($len-1) ){
+					$bracket = '';
+				}
+				array_push($new, trim($temp[$i].$bracket));
+			}
+
+		} else {
+			array_push($new, $v);
+		}
+
+	}
+	return $new;
+}
+
+/* //然后把括号右边的另起一行，比如if(1){ $a=5;   思路是分别查找每一行左括号和右括号的位置，如果右括号的位置大于左括号，说明是闭合的，否则另起下一行
 $new = array();
 $len = count($arr);
 for($i=0; $i<$len; $i++){
@@ -61,11 +94,22 @@ for($i=0; $i<$len; $i++){
 	} else {
 		array_push($new, $arr[$i]);
 	}
+} */
+
+/* 
+$arr = split_bracket($str);
+
+
+foreach($arr as $v){
+	
 }
 
-print_r($new);
 
 
+print_r($v);exit;
+echo implode("", $v);
+
+ */
 
 
 
@@ -74,34 +118,68 @@ function is_even($n){
 }
 
 
+function split_bracket_2($str){
+	static $level = 0;
+	static $i=0;
+	
+	$left_position = strpos($str, '{');  
+	$right_position = strpos($str, '}');
+
+echo $i++.' : '.$level."\n";	
+
+	if($right_position === false && $left_position >= 0){
+		$tab = str_repeat("\t",$level);
+		$level++;
+	}
+	
+	if($left_position === false && $right_position >= 0){
+		$level--;
+		$tab = str_repeat("\t",$level);
+	}
+
+
+	
+	return $tab.$str;
+}
+
+
+
 function split_bracket($str){
 	static $level = 0;
 	static $arr = array();
+	static $pre_bracket = '';   
 	//static $left = array();
 	//static $right = array();
 	
 	$left_position = strpos($str, '{');  
 	$right_position = strpos($str, '}');
 
-	if($left_position == 0 && $right_position == 0){
+	if($left_position === false && $right_position === false){
 		return $arr;
 	}
 	
 	//左括号、右括号
-	if($left_position < $right_position){
-				
-	//echo '{'.$level."\n";	exit;
+	if(($left_position !== false) && ($left_position < $right_position)){
+		
 		$temp_arr = explode("{", $str, 2);
 		
-		$level++;
+		if($pre_bracket == '{'){   //前一个同样是{号才缩进
+			$level++;
+		}
+		
 		$tab = str_repeat("\t",$level);
 		array_push($arr, $tab.$temp_arr[0].'{');
-print_r($arr);
-echo $temp_arr[1]."\n";
-		split_bracket($temp_arr[1]);
+//print_r($arr);echo $temp_arr[1]."\n";
+
+		$pre_bracket = '{';
+		return split_bracket($temp_arr[1]);
 		
 	} else {
-
+		
+	if($str != '}'){
+			$level++;
+		}
+		
 		$temp_arr = explode("}", $str, 2);
 		
 		$tab = str_repeat("\t",$level);
@@ -111,8 +189,10 @@ echo $temp_arr[1]."\n";
 	//echo '}'.$level."\n";		
 		$tab = str_repeat("\t",$level);
 		array_push($arr, $tab."}");
+//print_r($arr);echo $temp_arr[1]."\n";
 
-		split_bracket($temp_arr[1]);
+		$pre_bracket = '}';
+		return split_bracket($temp_arr[1]);
 		
 		
 	}
